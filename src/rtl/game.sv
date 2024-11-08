@@ -77,7 +77,10 @@ module game (
     wire  [13:0]  hero1_read_address;
 
     wire  [11:0]  gradon_left_rom_out     ;
-    wire  [13:0]  gradon_read_address;
+    wire  [13:0]  gradon_left_read_address;
+
+    wire  [11:0]  gradon_right_rom_out     ;
+    wire  [13:0]  gradon_right_read_address;
 
     wire  [11:0]  fon_rom_out     ;
     wire  [18:0]  fon_read_address;
@@ -323,7 +326,8 @@ end
     // Cause we need 1 clock for reading, we start erlier
     assign sber_logo_read_address = {3'b0, h_coord} - 14'd335 + ({4'b0, v_coord} - 14'd235)*14'd128;
     assign hero1_read_address = {3'b0, h_coord} - {4'b0,alian_h_coord} + ({4'b0, v_coord} - {4'b0,alian_v_coord})*14'd128;
-    assign gradon_read_address = {3'b0, h_coord} - {4'b0,gradon_h_coord} + ({4'b0, v_coord} - {4'b0,gradon_v_coord})*14'd128;
+    assign gradon_left_read_address = {3'b0, h_coord} - {4'b0,gradon_h_coord} + ({4'b0, v_coord} - {4'b0,gradon_v_coord})*14'd128;
+    assign gradon_right_read_address = {3'b0, h_coord} - {4'b0,gradon_h_coord} + ({4'b0, v_coord} - {4'b0,gradon_v_coord})*14'd128;
     assign fon_read_address = {8'b0, h_coord} + ({9'b0, v_coord})*14'd800;
     //for picture with size 128x128 we need 16384 pixel information
     sber_logo_rom sber_logo_rom (
@@ -337,8 +341,13 @@ end
     );
 
     gradon_left_rom gradon_left_rom (
-      .addr ( gradon_read_address ),
+      .addr ( gradon_left_read_address ),
       .word ( gradon_left_rom_out      ) 
+    );
+
+    gradon_right_rom gradon_right_rom (
+      .addr ( gradon_right_read_address ),
+      .word ( gradon_right_rom_out      ) 
     );
 
     fon_rom fon_rom (
@@ -396,14 +405,14 @@ end
             blue    = gradon_left_rom_out[11:8];
           end
         end else begin
-          if(sber_logo_rom_out[3:0] == 4'd0 & sber_logo_rom_out[7:4] == 4'd0 & sber_logo_rom_out[11:8] == 4'd0) begin
+          if(gradon_right_rom_out[3:0] == 4'd0 & gradon_right_rom_out[7:4] == 4'd0 & gradon_right_rom_out[11:8] == 4'd0) begin
             red     = fon_rom_out[3:0];
             green   = fon_rom_out[7:4];
             blue    = fon_rom_out[11:8];
           end else begin
-            red     = sber_logo_rom_out[3:0];
-            green   = sber_logo_rom_out[7:4];
-            blue    = sber_logo_rom_out[11:8];
+            red     = gradon_right_rom_out[3:0];
+            green   = gradon_right_rom_out[7:4];
+            blue    = gradon_right_rom_out[11:8];
           end
         end
       end else if(object_draw == 5'd2) begin

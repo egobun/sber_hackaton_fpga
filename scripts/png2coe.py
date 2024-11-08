@@ -1,8 +1,8 @@
 from PIL import Image
 
-image = Image.open('../figures/alien.png').convert('RGB')
+image = Image.open('../figures/gradon_right.png').convert('RGB')
 
-with open('../figures/coe/alien.hex','w') as f:
+with open('../figures/coe/gradon_right.hex','w') as f:
     f.write('memory_initialization_radix=16;\n')
     f.write('memory_initialization_vector=\n')
 
