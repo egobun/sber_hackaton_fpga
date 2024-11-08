@@ -69,9 +69,14 @@ module game (
   //----------------------- Sber logo timer              --------------------------//
     logic [31:0]  sber_logo_counter     ;      // Counter is counting how long showing Sber logo
     wire          sber_logo_active      ;      // Demonstrating Sber logo
+
+    wire          gameover_logo_active  ;
     // Read only memory (ROM) for sber logo file
     wire  [11:0]  sber_logo_rom_out     ;
     wire  [13:0]  sber_logo_read_address;
+
+    wire  [11:0]  gameover_logo_rom_out     ;
+    wire  [16:0]  gameover_logo_read_address;
 
     wire  [11:0]  hero1_rom_out     ;
     wire  [13:0]  hero1_read_address;
@@ -320,11 +325,14 @@ end
         sber_logo_counter <= sber_logo_counter + 32'd15;
     end
     assign sber_logo_active = ( sber_logo_counter < 32'd2_00000000 );
+        assign gameover_logo_active = SW[0];
+
   //----------- SBER logo ROM                                    -----------//
     // Screen resoulution is 800x600, the logo size is 128x128. We need to put the logo in the center.
     // Logo offset = (800-128)/2=336 from the left edge; Logo v coord = (600-128)/2 = 236
     // Cause we need 1 clock for reading, we start erlier
     assign sber_logo_read_address = {3'b0, h_coord} - 14'd335 + ({4'b0, v_coord} - 14'd235)*14'd128;
+    assign gameover_logo_read_address = {6'b0, h_coord} - 17'd219 + ({6'b0, v_coord} - 17'd119)*17'd360;
     assign hero1_read_address = {3'b0, h_coord} - {4'b0,alian_h_coord} + ({4'b0, v_coord} - {4'b0,alian_v_coord})*14'd128;
     assign gradon_left_read_address = {3'b0, h_coord} - {4'b0,gradon_h_coord} + ({4'b0, v_coord} - {4'b0,gradon_v_coord})*14'd128;
     assign gradon_right_read_address = {3'b0, h_coord} - {4'b0,gradon_h_coord} + ({4'b0, v_coord} - {4'b0,gradon_v_coord})*14'd128;
@@ -333,6 +341,11 @@ end
     sber_logo_rom sber_logo_rom (
       .addr ( sber_logo_read_address ),
       .word ( sber_logo_rom_out      ) 
+    );
+
+    gameover_rom gameover_rom (
+      .addr ( gameover_logo_read_address ),
+      .word ( gameover_logo_rom_out      ) 
     );
 
     hero1_rom hero1_rom (
@@ -366,8 +379,18 @@ end
       else begin
         object_draw = 5'd0;
       end
-      
     end
+
+    else if ( gameover_logo_active ) begin
+      if((h_coord[9:0] >= 10'd219) & (h_coord[9:0] < 10'd579) & (v_coord >= 10'd119) & (v_coord < 10'd479) & ~(gameover_logo_rom_out[11:0]==12'h000))
+      begin
+        object_draw = 5'd1;
+      end
+      else begin
+        object_draw = 5'd0;
+      end
+    end
+
     else begin
       if(( h_coord[9:0] >= gradon_h_coord ) & ( h_coord[9:0] <= (gradon_h_coord + gradon_width  )) &
                     ( v_coord >= gradon_v_coord ) & ( v_coord <= (gradon_v_coord + gradon_height ))) begin
@@ -392,7 +415,21 @@ end
         green   = (SW[1] ? 4'h8 : 4'h0);
         blue    = (SW[2] ? 4'h8 : 4'h0);
       end
-    end else begin
+    end 
+
+    else if(gameover_logo_active)begin
+      if(object_draw == 5'd1) begin
+        red     = gameover_logo_rom_out[3:0];
+        green   = gameover_logo_rom_out[7:4];
+        blue    = gameover_logo_rom_out[11:8];
+      end else begin
+        red     = 4'h0;
+        green   = 4'h0;
+        blue    = 4'h0;
+      end
+    end 
+
+    else begin
       if(object_draw == 5'd1) begin
         if(button_l) begin
           if(gradon_left_rom_out[3:0] == 4'd0 & gradon_left_rom_out[7:4] == 4'd0 & gradon_left_rom_out[11:8] == 4'd0) begin
