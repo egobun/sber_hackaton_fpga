@@ -51,11 +51,17 @@ module game (
     //  V
     parameter     gradon_width  = 128;         // Horizontal width
     parameter     gradon_height = 128;         // Vertical height
+    parameter     fireball_width  = 128;         // Horizontal width
+    parameter     fireball_height = 128;         // Vertical height
     logic [4:0]   object_draw        ;         // Is Sber Logo or demo object coordinate (with width and height)?
     logic [9:0]   gradon_h_coord     ;         // Object Point(P) horizontal coodrinate
     logic [9:0]   gradon_v_coord     ;         // Object Point(P) vertical coordinate
     logic [9:0]   gradon_h_speed     ;         // Horizontal Object movement speed
     logic [9:0]   gradon_v_speed     ;         // Vertical Object movement speed
+    logic [9:0]   fireball_h_coord     ;         // Object Point(P) horizontal coodrinate
+    logic [9:0]   fireball_v_coord     ;         // Object Point(P) vertical coordinate
+    logic [9:0]   fireball_h_speed     ;         // Horizontal Object movement speed
+    logic [9:0]   fireball_v_speed     ;         // Vertical Object movement speed
 
     parameter     alian_width  = 128;         // Horizontal width
     parameter     alian_height = 128;         // Vertical height
@@ -75,6 +81,9 @@ module game (
 
     wire  [11:0]  hero1_rom_out     ;
     wire  [13:0]  hero1_read_address;
+
+    wire  [11:0]  fireball_rom_out     ;
+    wire  [13:0]  fireball_read_address;
 
     wire  [11:0]  gradon_left_rom_out     ;
     wire  [13:0]  gradon_left_read_address;
@@ -136,7 +145,9 @@ module game (
   always @ ( posedge pixel_clk ) begin
     if ( !rst_n ) begin // Put object in the center
       gradon_h_coord <= 399;
-      gradon_v_coord <= 299;
+      gradon_v_coord <= 99;
+      fireball_h_coord <= 399;
+      fireball_v_coord <= 99;
     end
     else if ( end_of_frame && (frames_cntr == 0) ) begin
       if (regime_store == 2'b11) begin  // Buttons regime
