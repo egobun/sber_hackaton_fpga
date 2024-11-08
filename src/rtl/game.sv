@@ -49,20 +49,22 @@ module game (
     //  |   V heigh
     //  |
     //  V
-    parameter     object_width  = 8  ;         // Horizontal width
-    parameter     object_height = 20 ;         // Vertical height
+    parameter     gradon_width  = 128;         // Horizontal width
+    parameter     gradon_height = 128;         // Vertical height
     logic [4:0]   object_draw        ;         // Is Sber Logo or demo object coordinate (with width and height)?
-    logic [9:0]   object_h_coord     ;         // Object Point(P) horizontal coodrinate
-    logic [9:0]   object_v_coord     ;         // Object Point(P) vertical coordinate
-    logic [9:0]   object_h_speed     ;         // Horizontal Object movement speed
-    logic [9:0]   object_v_speed     ;         // Vertical Object movement speed
+    logic [9:0]   gradon_h_coord     ;         // Object Point(P) horizontal coodrinate
+    logic [9:0]   gradon_v_coord     ;         // Object Point(P) vertical coordinate
+    logic [9:0]   gradon_h_speed     ;         // Horizontal Object movement speed
+    logic [9:0]   gradon_v_speed     ;         // Vertical Object movement speed
 
-    parameter     object2_width  = 128;         // Horizontal width
-    parameter     object2_height = 128;         // Vertical height
-    logic [9:0]   object2_h_coord     ;         // Object Point(P) horizontal coodrinate
-    logic [9:0]   object2_v_coord     ;         // Object Point(P) vertical coordinate
-    logic [9:0]   object2_h_speed     ;         // Horizontal Object movement speed
-    logic [9:0]   object2_v_speed     ;         // Vertical Object movement speed
+    parameter     alian_width  = 128;         // Horizontal width
+    parameter     alian_height = 128;         // Vertical height
+    logic [9:0]   alian_h_coord     ;         // Object Point(P) horizontal coodrinate
+    logic [9:0]   alian_v_coord     ;         // Object Point(P) vertical coordinate
+    logic [9:0]   alian_h_speed     ;         // Horizontal Object movement speed
+
+    logic [9:0] alian_v_speed;
+
 
   //----------------------- Sber logo timer              --------------------------//
     logic [31:0]  sber_logo_counter     ;      // Counter is counting how long showing Sber logo
@@ -74,6 +76,8 @@ module game (
     wire  [11:0]  hero1_rom_out     ;
     wire  [13:0]  hero1_read_address;
 
+    wire  [11:0]  gradon_left_rom_out     ;
+    wire  [13:0]  gradon_read_address;
 
     wire  [11:0]  fon_rom_out     ;
     wire  [18:0]  fon_read_address;
@@ -124,66 +128,66 @@ module game (
   assign accel_data_x_corr = accel_data_x + ACCEL_X_CORR;
   assign accel_data_y_corr = accel_data_y + ACCEL_Y_CORR;
 //------------------------- Object movement in 2 regimes  ----------------------------//
-  assign object_v_speed = 10'd1;
-  assign object_h_speed = 10'd1;
+  assign gradon_v_speed = 10'd1;
+  assign gradon_h_speed = 10'd1;
   always @ ( posedge pixel_clk ) begin
     if ( !rst_n ) begin // Put object in the center
-      object_h_coord <= 399;
-      object_v_coord <= 299;
+      gradon_h_coord <= 399;
+      gradon_v_coord <= 299;
     end
     else if ( end_of_frame && (frames_cntr == 0) ) begin
       if (regime_store == 2'b11) begin  // Buttons regime
         if ( button_l ) begin           // Moving left
-          if ( object_h_coord < object_h_speed)
-            object_h_coord <= 0;
+          if ( gradon_h_coord < gradon_h_speed)
+            gradon_h_coord <= 0;
           else
-            object_h_coord <= object_h_coord - object_h_speed;
+            gradon_h_coord <= gradon_h_coord - gradon_h_speed;
         end
         else if ( button_r ) begin
-          if ( object_h_coord + object_h_speed + object_width >= 10'd799 )
-            object_h_coord <= 10'd799 - object_width;
+          if ( gradon_h_coord + gradon_h_speed + gradon_width >= 10'd799 )
+            gradon_h_coord <= 10'd799 - gradon_width;
           else
-            object_h_coord <= object_h_coord + object_h_speed;
+            gradon_h_coord <= gradon_h_coord + gradon_h_speed;
         end
         //
         if      ( button_u ) begin
-          if ( object_v_coord < object_v_speed )
-            object_v_coord <= 0;
+          if ( gradon_v_coord < gradon_v_speed )
+            gradon_v_coord <= 0;
           else
-            object_v_coord <= object_v_coord - object_v_speed;
+            gradon_v_coord <= gradon_v_coord - gradon_v_speed;
         end
         else if ( button_d  ) begin
-          if ( object_v_coord + object_v_speed + object_height >= 10'd599 )
-            object_v_coord <= 10'd599 - object_height;
+          if ( gradon_v_coord + gradon_v_speed + gradon_height >= 10'd599 )
+            gradon_v_coord <= 10'd599 - gradon_height;
           else
-            object_v_coord <= object_v_coord + object_v_speed;
+            gradon_v_coord <= gradon_v_coord + gradon_v_speed;
         end
       end
       else if (regime_store == 2'b10) begin  // Accelerometer regime
         if      ( !accel_data_y_corr[7] && ( accel_data_y_corr != 8'h00 )) begin
-          if ( object_h_coord < object_h_speed)
-            object_h_coord <= 0;
+          if ( gradon_h_coord < gradon_h_speed)
+            gradon_h_coord <= 0;
           else
-            object_h_coord <= object_h_coord - object_h_speed;
+            gradon_h_coord <= gradon_h_coord - gradon_h_speed;
         end
         else if ( accel_data_y_corr[7] && ( accel_data_y_corr != 8'h00 ) ) begin
-          if ( object_h_coord + object_h_speed + object_width >= 10'd799 )
-            object_h_coord <= 10'd799 - object_width;
+          if ( gradon_h_coord + gradon_h_speed + gradon_width >= 10'd799 )
+            gradon_h_coord <= 10'd799 - gradon_width;
           else
-            object_h_coord <= object_h_coord + object_h_speed;
+            gradon_h_coord <= gradon_h_coord + gradon_h_speed;
         end
         //
         if      ( accel_data_x_corr[7] && ( accel_data_x_corr != 8'h00 ) ) begin
-          if ( object_v_coord < object_v_speed )
-            object_v_coord <= 0;
+          if ( gradon_v_coord < gradon_v_speed )
+            gradon_v_coord <= 0;
           else
-            object_v_coord <= object_v_coord - object_v_speed;
+            gradon_v_coord <= gradon_v_coord - gradon_v_speed;
         end
         else if (!accel_data_x_corr[7] && ( accel_data_x_corr != 8'h00 ) )  begin
-          if ( object_v_coord + object_v_speed + object_height >= 10'd599 )
-            object_v_coord <= 10'd599 - object_height;
+          if ( gradon_v_coord + gradon_v_speed + gradon_height >= 10'd599 )
+            gradon_v_coord <= 10'd599 - gradon_height;
           else
-            object_v_coord <= object_v_coord + object_v_speed;
+            gradon_v_coord <= gradon_v_coord + gradon_v_speed;
         end
       end
     end
@@ -197,6 +201,7 @@ logic [31:0] clk_counter;
       clk_counter <= 32'd0;
     end else begin
       clk_counter <= clk_counter + 1'd1;
+      
     end
   end
 
@@ -208,17 +213,18 @@ logic [31:0] clk_counter;
 
   logic forse;
   assign jump_length = 10'd100;
-
-  assign jump_coordinate = 10'd499;
-
+  
   always_ff @ (posedge pixel_clk)
     if (!rst_n) begin
       state <= S0;
-      object2_v_coord <= 10'd355;
+      alian_v_coord <= 10'd355;
       
+      jump_coordinate <= 10'd299;
     end
     else begin
+      
       if (enable_jump)
+      
       state <= next_state;
     end
 
@@ -232,74 +238,72 @@ logic [31:0] clk_counter;
 
   state_e state, next_state;
 
-  
-
 always_comb begin
     case (state)
-        S0: if (object2_h_coord == jump_coordinate) next_state = S1;
-        S1: if ((object2_h_coord == 499 + jump_length/2) || (object2_h_coord == 499 - jump_length/2)) next_state = S2;
-        S2: if ((object2_h_coord == 499 + jump_length) || (object2_h_coord == 499 - jump_length)) next_state = S0;
+        S0: if (alian_h_coord == jump_coordinate + 10'd100) next_state = S1;
+        S1: if ((alian_h_coord == jump_coordinate + 10'd100 + jump_length/2) || (alian_h_coord == jump_coordinate + 10'd100- jump_length/2)) next_state = S2;
+        S2: if ((alian_h_coord == jump_coordinate + 10'd100 + jump_length) || (alian_h_coord == jump_coordinate + 10'd100- jump_length)) next_state = S0;
         default: next_state = state; // явная установка по умолчанию
     endcase
 end
 
   always_comb begin
-    if((state == S0) & (object2_h_coord != 499)) begin
-      object2_v_speed = 10'd0;
+    if((state == S0) & (alian_h_coord != jump_coordinate + 10'd100)) begin
+      alian_v_speed = 10'd0;
       forse = 1'd0;
     end
-    else if((state == S0) & ( object2_h_coord == 499)) begin 
-      object2_v_speed = 10'd1;
+    else if((state == S0) & ( alian_h_coord == jump_coordinate + 10'd100)) begin 
+      alian_v_speed = 10'd1;
       forse = 1'd0;
     end
-    else if((state == S1) & ((object2_h_coord == 499 + jump_length/2) || (object2_h_coord == 499 - jump_length/2))) begin
-      object2_v_speed = 10'd1;
+    else if((state == S1) & ((alian_h_coord == jump_coordinate  + 10'd100+ jump_length/2) || (alian_h_coord == jump_coordinate + 10'd100- jump_length/2))) begin
+      alian_v_speed = 10'd1;
       forse = 1'd1;
     end
-    else if((state == S1) & ((object2_h_coord != 499 + jump_length/2) & (object2_h_coord != 499 - jump_length/2))) begin
-      object2_v_speed = 10'd1;
+    else if((state == S1) & ((alian_h_coord != jump_coordinate + 10'd100 + jump_length/2) & (alian_h_coord != jump_coordinate + 10'd100- jump_length/2))) begin
+      alian_v_speed = 10'd1;
       forse = 1'd0;
     end
-    else if((state == S2) & ((object2_h_coord == 499 + jump_length) || (object2_h_coord == 499 - jump_length))) begin
-      object2_v_speed = 10'd0;
+    else if((state == S2) & ((alian_h_coord == jump_coordinate  + 10'd100+ jump_length) || (alian_h_coord == jump_coordinate + 10'd100- jump_length))) begin
+      alian_v_speed = 10'd0;
       forse = 1'd1;
     end
-    else if((state == S2) & ((object2_h_coord != 499 + jump_length) & (object2_h_coord != 499 - jump_length))) begin
-      object2_v_speed = 10'd1;
+    else if((state == S2) & ((alian_h_coord != jump_coordinate  + 10'd100 + jump_length) & (alian_h_coord != jump_coordinate + 10'd100- jump_length))) begin
+      alian_v_speed = 10'd1;
       forse = 1'd1;
     end else begin
-      object2_v_speed = 10'd0;
+      alian_v_speed = 10'd0;
       forse = 1'd1;
     end
   end
 
 
-  // assign object2_v_speed = 10'd0;
-  assign object2_h_speed = 10'd1;
+  // assign alian_v_speed = 10'd0;
+  assign alian_h_speed = 10'd1;
   logic move;
   always @ ( posedge pixel_clk ) begin
     if ( !rst_n ) begin // Put object in the center
-      object2_h_coord <= 299;
+      alian_h_coord <= 299;
 
       move <= 1'b1;
     end
     else if(enable_clk) begin
-      object2_v_coord <= object2_v_coord + ((-1)**(~forse))*object2_v_speed;
+      alian_v_coord <= alian_v_coord + ((-1)**(~forse))*alian_v_speed;
       if ( move ) begin           
-        if ( object2_h_coord < object2_h_speed) begin
-          object2_h_coord <= 0;          
+        if ( alian_h_coord < alian_h_speed) begin
+          alian_h_coord <= 0;          
           move <= ~move;
         end
         else
-          object2_h_coord <= object2_h_coord - object2_h_speed;
+          alian_h_coord <= alian_h_coord - alian_h_speed;
       end
       else if ( ~move ) begin
-        if ( object2_h_coord + object2_h_speed + object2_width >= 10'd799) begin
-          object2_h_coord <= 10'd799 - object2_width;
+        if ( alian_h_coord + alian_h_speed + alian_width >= 10'd799) begin
+          alian_h_coord <= 10'd799 - alian_width;
           move <= ~move;
         end
         else
-          object2_h_coord <= object2_h_coord + object2_h_speed;
+          alian_h_coord <= alian_h_coord + alian_h_speed;
       end
     end
   end
@@ -318,7 +322,8 @@ end
     // Logo offset = (800-128)/2=336 from the left edge; Logo v coord = (600-128)/2 = 236
     // Cause we need 1 clock for reading, we start erlier
     assign sber_logo_read_address = {3'b0, h_coord} - 14'd335 + ({4'b0, v_coord} - 14'd235)*14'd128;
-    assign hero1_read_address = {3'b0, h_coord} - {4'b0,object2_h_coord} + ({4'b0, v_coord} - {4'b0,object2_v_coord})*14'd128;
+    assign hero1_read_address = {3'b0, h_coord} - {4'b0,alian_h_coord} + ({4'b0, v_coord} - {4'b0,alian_v_coord})*14'd128;
+    assign gradon_read_address = {3'b0, h_coord} - {4'b0,gradon_h_coord} + ({4'b0, v_coord} - {4'b0,gradon_v_coord})*14'd128;
     assign fon_read_address = {8'b0, h_coord} + ({9'b0, v_coord})*14'd800;
     //for picture with size 128x128 we need 16384 pixel information
     sber_logo_rom sber_logo_rom (
@@ -329,6 +334,11 @@ end
     hero1_rom hero1_rom (
       .addr ( hero1_read_address ),
       .word ( hero1_rom_out      ) 
+    );
+
+    gradon_left_rom gradon_left_rom (
+      .addr ( gradon_read_address ),
+      .word ( gradon_left_rom_out      ) 
     );
 
     fon_rom fon_rom (
@@ -350,11 +360,11 @@ end
       
     end
     else begin
-      if(( h_coord[9:0] >= object_h_coord ) & ( h_coord[9:0] <= (object_h_coord + object_width  )) &
-                    ( v_coord >= object_v_coord ) & ( v_coord <= (object_v_coord + object_height ))) begin
+      if(( h_coord[9:0] >= gradon_h_coord ) & ( h_coord[9:0] <= (gradon_h_coord + gradon_width  )) &
+                    ( v_coord >= gradon_v_coord ) & ( v_coord <= (gradon_v_coord + gradon_height ))) begin
         object_draw = 5'd1;
-      end else if(( h_coord[9:0] >= object2_h_coord ) & ( h_coord[9:0] <= (object2_h_coord + object2_width  )) &
-                    ( v_coord >= object2_v_coord ) & ( v_coord <= (object2_v_coord + object2_height ))) begin
+      end else if(( h_coord[9:0] >= alian_h_coord ) & ( h_coord[9:0] <= (alian_h_coord + alian_width  )) &
+                    ( v_coord >= alian_v_coord ) & ( v_coord <= (alian_v_coord + alian_height ))) begin
         object_draw = 5'd2;
       end else begin
         object_draw = 5'd0;
@@ -375,9 +385,27 @@ end
       end
     end else begin
       if(object_draw == 5'd1) begin
-        red     = 4'hf;
-        green   = 4'hf;
-        blue    = 4'hf;
+        if(button_l) begin
+          if(gradon_left_rom_out[3:0] == 4'd0 & gradon_left_rom_out[7:4] == 4'd0 & gradon_left_rom_out[11:8] == 4'd0) begin
+            red     = fon_rom_out[3:0];
+            green   = fon_rom_out[7:4];
+            blue    = fon_rom_out[11:8];
+          end else begin
+            red     = gradon_left_rom_out[3:0];
+            green   = gradon_left_rom_out[7:4];
+            blue    = gradon_left_rom_out[11:8];
+          end
+        end else begin
+          if(sber_logo_rom_out[3:0] == 4'd0 & sber_logo_rom_out[7:4] == 4'd0 & sber_logo_rom_out[11:8] == 4'd0) begin
+            red     = fon_rom_out[3:0];
+            green   = fon_rom_out[7:4];
+            blue    = fon_rom_out[11:8];
+          end else begin
+            red     = sber_logo_rom_out[3:0];
+            green   = sber_logo_rom_out[7:4];
+            blue    = sber_logo_rom_out[11:8];
+          end
+        end
       end else if(object_draw == 5'd2) begin
         if(hero1_rom_out[3:0] == 4'd0 & hero1_rom_out[7:4] == 4'd0 & hero1_rom_out[11:8] == 4'd0) begin
           red     = fon_rom_out[3:0];
