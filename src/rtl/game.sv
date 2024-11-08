@@ -51,8 +51,8 @@ module game (
     //  V
     parameter     gradon_width  = 128;         // Horizontal width
     parameter     gradon_height = 128;         // Vertical height
-    parameter     fireball_width  = 128;         // Horizontal width
-    parameter     fireball_height = 128;         // Vertical height
+    parameter     fireball_width  = 64;         // Horizontal width
+    parameter     fireball_height = 64;         // Vertical height
     logic [4:0]   object_draw        ;         // Is Sber Logo or demo object coordinate (with width and height)?
     logic [9:0]   gradon_h_coord     ;         // Object Point(P) horizontal coodrinate
     logic [9:0]   gradon_v_coord     ;         // Object Point(P) vertical coordinate
@@ -76,7 +76,7 @@ module game (
     logic [31:0]  sber_logo_counter     ;      // Counter is counting how long showing Sber logo
     wire          sber_logo_active      ;      // Demonstrating Sber logo
 
-    wire          gameover_logo_active  ;
+    logic         gameover_logo_active  ;
     // Read only memory (ROM) for sber logo file
     wire  [11:0]  sber_logo_rom_out     ;
     wire  [13:0]  sber_logo_read_address;
@@ -88,7 +88,7 @@ module game (
     wire  [13:0]  hero1_read_address;
 
     wire  [11:0]  fireball_rom_out     ;
-    wire  [13:0]  fireball_read_address;
+    wire  [11:0]  fireball_read_address;
 
     wire  [11:0]  gradon_left_rom_out     ;
     wire  [13:0]  gradon_left_read_address;
@@ -151,8 +151,8 @@ module game (
     if ( !rst_n ) begin // Put object in the center
       gradon_h_coord <= 399;
       gradon_v_coord <= 99;
-      fireball_h_coord <= 399;
-      fireball_v_coord <= 99;
+      fireball_h_coord <= 490;
+      fireball_v_coord <= 180;
     end
     else if ( end_of_frame && (frames_cntr == 0) ) begin
       if (regime_store == 2'b11) begin  // Buttons regime
@@ -181,38 +181,45 @@ module game (
           else
             gradon_v_coord <= gradon_v_coord + gradon_v_speed;
         end
-      end
-      else if (regime_store == 2'b10) begin  // Accelerometer regime
-        if      ( !accel_data_y_corr[7] && ( accel_data_y_corr != 8'h00 )) begin
-          if ( gradon_h_coord < gradon_h_speed)
-            gradon_h_coord <= 0;
+        //ACCELEROMETR AND FIREBALL MECHANICS
+        if(SW[0]) begin
+          fireball_h_coord <= gradon_h_coord + fireball_width + 10'd20;
+        end else if      ( !accel_data_y_corr[7] && ( accel_data_y_corr != 8'h00 )) begin
+          if ( fireball_h_coord < fireball_h_speed)
+            fireball_h_coord <= 0;
           else
-            gradon_h_coord <= gradon_h_coord - gradon_h_speed;
+            fireball_h_coord <= fireball_h_coord - fireball_h_speed;
         end
         else if ( accel_data_y_corr[7] && ( accel_data_y_corr != 8'h00 ) ) begin
-          if ( gradon_h_coord + gradon_h_speed + gradon_width >= 10'd799 )
-            gradon_h_coord <= 10'd799 - gradon_width;
+          if ( fireball_h_coord + fireball_h_speed + fireball_width >= 10'd799 )
+            fireball_h_coord <= 10'd799 - fireball_width;
           else
-            gradon_h_coord <= gradon_h_coord + gradon_h_speed;
+            fireball_h_coord <= fireball_h_coord + fireball_h_speed;
         end
         //
-        if      ( accel_data_x_corr[7] && ( accel_data_x_corr != 8'h00 ) ) begin
-          if ( gradon_v_coord < gradon_v_speed )
-            gradon_v_coord <= 0;
+        if(SW[0]) begin
+          fireball_v_coord <= gradon_v_coord + fireball_height + 10'd20;
+        end else if      ( accel_data_x_corr[7] && ( accel_data_x_corr != 8'h00 ) ) begin
+          if ( fireball_v_coord < fireball_v_speed )
+            fireball_v_coord <= 0;
           else
-            gradon_v_coord <= gradon_v_coord - gradon_v_speed;
+            fireball_v_coord <= fireball_v_coord - fireball_v_speed;
         end
         else if (!accel_data_x_corr[7] && ( accel_data_x_corr != 8'h00 ) )  begin
-          if ( gradon_v_coord + gradon_v_speed + gradon_height >= 10'd599 )
-            gradon_v_coord <= 10'd599 - gradon_height;
+          if ( fireball_v_coord + fireball_v_speed + fireball_height >= 10'd599 )
+            fireball_v_coord <= 10'd599 - fireball_height;
           else
-            gradon_v_coord <= gradon_v_coord + gradon_v_speed;
+            fireball_v_coord <= fireball_v_coord + fireball_v_speed;
         end
+      end
+      else if (regime_store == 2'b01) begin  // Accelerometer regime
+        
       end
     end
   end
 
 //---------------------------------------------------------------------------------------------------
+
 
 logic [31:0] clk_counter;
   always @ ( posedge pixel_clk ) begin
@@ -302,7 +309,7 @@ end
   logic move;
   always @ ( posedge pixel_clk ) begin
     if ( !rst_n ) begin // Put object in the center
-      alian_h_coord <= 299;
+      alian_h_coord <= 10'd9;
 
       move <= 1'b1;
     end
@@ -336,7 +343,7 @@ end
         sber_logo_counter <= sber_logo_counter + 32'd15;
     end
     assign sber_logo_active = ( sber_logo_counter < 32'd2_00000000 );
-        assign gameover_logo_active = SW[0];
+    //assign gameover_logo_active = alian_is_dead;
 
   //----------- SBER logo ROM                                    -----------//
     // Screen resoulution is 800x600, the logo size is 128x128. We need to put the logo in the center.
@@ -347,6 +354,7 @@ end
     assign hero1_read_address = {3'b0, h_coord} - {4'b0,alian_h_coord} + ({4'b0, v_coord} - {4'b0,alian_v_coord})*14'd128;
     assign gradon_left_read_address = {3'b0, h_coord} - {4'b0,gradon_h_coord} + ({4'b0, v_coord} - {4'b0,gradon_v_coord})*14'd128;
     assign gradon_right_read_address = {3'b0, h_coord} - {4'b0,gradon_h_coord} + ({4'b0, v_coord} - {4'b0,gradon_v_coord})*14'd128;
+    assign fireball_read_address = {1'b0,h_coord} - {2'b0,fireball_h_coord} + ({2'b0, v_coord} - {2'b0,fireball_v_coord})*12'd64;
     assign fon_read_address = {8'b0, h_coord} + ({9'b0, v_coord})*14'd800;
     //for picture with size 128x128 we need 16384 pixel information
     sber_logo_rom sber_logo_rom (
@@ -364,6 +372,11 @@ end
       .word ( hero1_rom_out      ) 
     );
 
+    fireball_rom fireball_rom (
+      .addr ( fireball_read_address ),
+      .word ( fireball_rom_out      ) 
+    );
+
     gradon_left_rom gradon_left_rom (
       .addr ( gradon_left_read_address ),
       .word ( gradon_left_rom_out      ) 
@@ -379,6 +392,27 @@ end
       .word ( fon_rom_out      ) 
     );
 //____________________________________________________________________________//
+
+
+// ------------ FIREBALL IS OUT ----------------------------------------------//
+logic fireball_is_out;
+fireball_is_out fireball_in_out(.*);
+
+
+//------------- ALIAN IS DEAD ------------------------------------------------//
+logic alian_is_dead;
+alian_is_dead alian_dead(.*);
+
+
+//-------------МОЖНО ЛИ ТАК ДЕЛАТЬ????????------------------------------------//
+always_ff begin
+  if (!rst_n)
+    gameover_logo_active = 1'b0;
+  else if(alian_is_dead)
+    gameover_logo_active = 1'b1;
+  else 
+    gameover_logo_active = gameover_logo_active;
+end
 
 //------------- RGB MUX outputs                                  -------------//
   always_comb begin
@@ -403,7 +437,10 @@ end
     end
 
     else begin
-      if(( h_coord[9:0] >= gradon_h_coord ) & ( h_coord[9:0] <= (gradon_h_coord + gradon_width  )) &
+      if(( h_coord[9:0] >= fireball_h_coord ) & ( h_coord[9:0] <= (fireball_h_coord + fireball_width  )) &
+                    ( v_coord >= fireball_v_coord ) & ( v_coord <= (fireball_v_coord + fireball_height ))) begin
+        object_draw = 5'd3;
+      end else if(( h_coord[9:0] >= gradon_h_coord ) & ( h_coord[9:0] <= (gradon_h_coord + gradon_width  )) &
                     ( v_coord >= gradon_v_coord ) & ( v_coord <= (gradon_v_coord + gradon_height ))) begin
         object_draw = 5'd1;
       end else if(( h_coord[9:0] >= alian_h_coord ) & ( h_coord[9:0] <= (alian_h_coord + alian_width  )) &
@@ -441,7 +478,17 @@ end
     end 
 
     else begin
-      if(object_draw == 5'd1) begin
+      if(object_draw == 5'd3) begin
+        if((fireball_rom_out[3:0] == 4'd0 & fireball_rom_out[7:4] == 4'd0 & fireball_rom_out[11:8] == 4'd0) || (fireball_is_out)) begin
+          red     = fon_rom_out[3:0];
+          green   = fon_rom_out[7:4];
+          blue    = fon_rom_out[11:8];
+        end else begin
+            red     = fireball_rom_out[3:0];
+            green   = fireball_rom_out[7:4];
+            blue    = fireball_rom_out[11:8];
+        end
+      end else if(object_draw == 5'd1) begin
         if(button_l) begin
           if(gradon_left_rom_out[3:0] == 4'd0 & gradon_left_rom_out[7:4] == 4'd0 & gradon_left_rom_out[11:8] == 4'd0) begin
             red     = fon_rom_out[3:0];
@@ -468,16 +515,17 @@ end
           red     = fon_rom_out[3:0];
           green   = fon_rom_out[7:4];
           blue    = fon_rom_out[11:8];
-      end else begin
-          red     = hero1_rom_out[3:0];
-          green   = hero1_rom_out[7:4];
-          blue    = hero1_rom_out[11:8];
-      end
+        end else begin
+            red     = hero1_rom_out[3:0];
+            green   = hero1_rom_out[7:4];
+            blue    = hero1_rom_out[11:8];
+        end
       end else begin
           red     = fon_rom_out[3:0];
           green   = fon_rom_out[7:4];
           blue    = fon_rom_out[11:8];
       end
+      
 
     end
   end
