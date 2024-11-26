@@ -8,18 +8,18 @@ The essence of the game is that by controlling a fireball that is released by a 
 
 ## Board functionality
 Below is the functionality of the board, which was used in the implementation of the game and where it is used:
-*accelerometer         - fireball control
-*7-segment indicators  - shows x and y coordinates relative to the surface
-*buttons               - dragon control
-*switches              - fireball release (character control change)
-*VGA                   - image output to the screen
+* accelerometer         - fireball control
+* 7-segment indicators  - shows x and y coordinates relative to the surface
+* buttons               - dragon control
+* switches              - fireball release (character control change)
+* VGA                   - image output to the screen
 
 ## Realization
 The basis of the implementation was as follows:
-*The images were implemented simply by downloading .png images from the Internet and using a script to output them.
-*The transparent background of the pictures was made by addressing the background pixels instead of the background pixels of the characters
-*The mechanics of the jump were implemented using a finite state machine
-*The characters were controlled by changing their coordinates
+* The images were implemented simply by downloading .png images from the Internet and using a script to output them.
+* The transparent background of the pictures was made by addressing the background pixels instead of the background pixels of the characters
+* The mechanics of the jump were implemented using a finite state machine
+* The characters were controlled by changing their coordinates
 
 ## Authors
 The "Bit_Banders" team:
