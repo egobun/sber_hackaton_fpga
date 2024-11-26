@@ -21,6 +21,15 @@ The basis of the implementation was as follows:
 * The mechanics of the jump were implemented using a finite state machine
 * The characters were controlled by changing their coordinates
 
+# Simulation
+Need a free open source Verilator simulator
+```
+git clone https://github.com/egobun/sber_hackaton_fpga.git
+cd src/sim
+make
+./obj_dir/sberday
+```
+
 ## Authors
 The "Bit_Banders" team:
 1. [Bunakov Egor](https://t.me/Egor_Bunakov)
