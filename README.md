@@ -1,5 +1,4 @@
 # sber_hackaton_fpga
-======
 
 ## What kind of event?
 FRKT MIPT and Sber organized "Sber Hack&Learn Day" 8-9.11.24. The task of our team "Bit_Banders" was to create own game using the functionality of the Nexus 7 Artix-7 FPGA.
