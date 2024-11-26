@@ -17,9 +17,9 @@ module game (
     input  wire  [10:0]   h_coord   ,
     input  wire  [ 9:0]   v_coord   ,
   //--------- VGA outputs                        --------//
-    output wire  [3:0]    red       ,  // 4-bit color output
-    output wire  [3:0]    green     ,  // 4-bit color output
-    output wire  [3:0]    blue      ,  // 4-bit color output
+    output reg  [3:0]    red       ,  // 4-bit color output
+    output reg  [3:0]    green     ,  // 4-bit color output
+    output reg  [3:0]    blue      ,  // 4-bit color output
   //--------- Switches for background colour     --------//
     input  wire  [2:0]    SW        ,
   //--------- Regime                             --------//
@@ -80,6 +80,9 @@ module game (
     // Read only memory (ROM) for sber logo file
     wire  [11:0]  sber_logo_rom_out     ;
     wire  [13:0]  sber_logo_read_address;
+
+    wire  [11:0]  hello_team_rom_out     ;
+    wire  [14:0]  hello_team_read_address;
 
     wire  [11:0]  gameover_logo_rom_out     ;
     wire  [16:0]  gameover_logo_read_address;
@@ -153,9 +156,10 @@ module game (
       gradon_v_coord <= 99;
       fireball_h_coord <= 490;
       fireball_v_coord <= 180;
+      fireball_h_speed <= 1;
+      fireball_v_speed <= 1;
     end
     else if ( end_of_frame && (frames_cntr == 0) ) begin
-      if (regime_store == 2'b11) begin  // Buttons regime
         if ( button_l ) begin           // Moving left
           if ( gradon_h_coord < gradon_h_speed)
             gradon_h_coord <= 0;
@@ -184,38 +188,40 @@ module game (
         //ACCELEROMETR AND FIREBALL MECHANICS
         if(SW[0]) begin
           fireball_h_coord <= gradon_h_coord + fireball_width + 10'd20;
-        end else if      ( !accel_data_y_corr[7] && ( accel_data_y_corr != 8'h00 )) begin
-          if ( fireball_h_coord < fireball_h_speed)
-            fireball_h_coord <= 0;
-          else
-            fireball_h_coord <= fireball_h_coord - fireball_h_speed;
-        end
-        else if ( accel_data_y_corr[7] && ( accel_data_y_corr != 8'h00 ) ) begin
-          if ( fireball_h_coord + fireball_h_speed + fireball_width >= 10'd799 )
-            fireball_h_coord <= 10'd799 - fireball_width;
-          else
-            fireball_h_coord <= fireball_h_coord + fireball_h_speed;
+        end 
+        else begin
+          if      ( !accel_data_y_corr[7] && ( accel_data_y_corr != 8'h00 )) begin
+            if ( fireball_h_coord < fireball_h_speed)
+              fireball_h_coord <= 0;
+            else
+              fireball_h_coord <= fireball_h_coord - fireball_h_speed;
+          end
+          else if ( accel_data_y_corr[7] && ( accel_data_y_corr != 8'h00 ) ) begin
+            if ( fireball_h_coord + fireball_h_speed + fireball_width >= 10'd799 )
+              fireball_h_coord <= 10'd799 - fireball_width;
+            else
+              fireball_h_coord <= fireball_h_coord + fireball_h_speed;
+          end
         end
         //
         if(SW[0]) begin
           fireball_v_coord <= gradon_v_coord + fireball_height + 10'd20;
-        end else if      ( accel_data_x_corr[7] && ( accel_data_x_corr != 8'h00 ) ) begin
-          if ( fireball_v_coord < fireball_v_speed )
-            fireball_v_coord <= 0;
-          else
-            fireball_v_coord <= fireball_v_coord - fireball_v_speed;
-        end
-        else if (!accel_data_x_corr[7] && ( accel_data_x_corr != 8'h00 ) )  begin
-          if ( fireball_v_coord + fireball_v_speed + fireball_height >= 10'd599 )
-            fireball_v_coord <= 10'd599 - fireball_height;
-          else
-            fireball_v_coord <= fireball_v_coord + fireball_v_speed;
+        end else begin
+          if      ( accel_data_x_corr[7] && ( accel_data_x_corr != 8'h00 ) ) begin
+            if ( fireball_v_coord < fireball_v_speed )
+              fireball_v_coord <= 0;
+            else
+              fireball_v_coord <= fireball_v_coord - fireball_v_speed;
+          end
+          else if (!accel_data_x_corr[7] && ( accel_data_x_corr != 8'h00 ) )  begin
+            if ( fireball_v_coord + fireball_v_speed + fireball_height >= 10'd599 )
+              fireball_v_coord <= 10'd599 - fireball_height;
+            else
+              fireball_v_coord <= fireball_v_coord + fireball_v_speed;
+          end
         end
       end
-      else if (regime_store == 2'b01) begin  // Accelerometer regime
-        
-      end
-    end
+    
   end
 
 //---------------------------------------------------------------------------------------------------
@@ -273,39 +279,46 @@ always_comb begin
     endcase
 end
 
-  always_comb begin
+    always_comb begin
     if((state == S0) & (alian_h_coord != jump_coordinate + 10'd100)) begin
-      alian_v_speed = 10'd0;
-      forse = 1'd0;
+      alian_v_coord_copy = alian_v_coord;
+      //alian_v_speed = 10'd0;
+      //forse = 1'd0;
     end
     else if((state == S0) & ( alian_h_coord == jump_coordinate + 10'd100)) begin 
-      alian_v_speed = 10'd1;
-      forse = 1'd0;
+      alian_v_coord_copy = alian_v_coord - alian_v_speed;
+      //alian_v_speed = 10'd1;
+      //forse = 1'd0;
     end
     else if((state == S1) & ((alian_h_coord == jump_coordinate  + 10'd100+ jump_length/2) || (alian_h_coord == jump_coordinate + 10'd100- jump_length/2))) begin
-      alian_v_speed = 10'd1;
-      forse = 1'd1;
+      alian_v_coord_copy = alian_v_coord + alian_v_speed;
+      //alian_v_speed = 10'd1;
+      //forse = 1'd1;
     end
     else if((state == S1) & ((alian_h_coord != jump_coordinate + 10'd100 + jump_length/2) & (alian_h_coord != jump_coordinate + 10'd100- jump_length/2))) begin
-      alian_v_speed = 10'd1;
-      forse = 1'd0;
+      alian_v_coord_copy = alian_v_coord - alian_v_speed;
+      //alian_v_speed = 10'd1;
+      //forse = 1'd0;
     end
     else if((state == S2) & ((alian_h_coord == jump_coordinate  + 10'd100+ jump_length) || (alian_h_coord == jump_coordinate + 10'd100- jump_length))) begin
-      alian_v_speed = 10'd0;
-      forse = 1'd1;
+      alian_v_coord_copy = alian_v_coord;
+      //alian_v_speed = 10'd0;
+      //forse = 1'd1;
     end
     else if((state == S2) & ((alian_h_coord != jump_coordinate  + 10'd100 + jump_length) & (alian_h_coord != jump_coordinate + 10'd100- jump_length))) begin
-      alian_v_speed = 10'd1;
-      forse = 1'd1;
+      alian_v_coord_copy = alian_v_coord + alian_v_speed;
+      //alian_v_speed = 10'd1;
+      //forse = 1'd1;
     end else begin
-      alian_v_speed = 10'd0;
-      forse = 1'd1;
+      alian_v_coord_copy = alian_v_coord;
+      //alian_v_speed = 10'd0;
+      //forse = 1'd1;
     end
   end
 
-
-  // assign alian_v_speed = 10'd0;
+  logic [9:0] alian_v_coord_copy;
   assign alian_h_speed = 10'd1;
+  assign alian_v_speed = 10'd1;
   logic move;
   always @ ( posedge pixel_clk ) begin
     if ( !rst_n ) begin // Put object in the center
@@ -314,7 +327,7 @@ end
       move <= 1'b1;
     end
     else if(enable_clk) begin
-      alian_v_coord <= alian_v_coord + ((-1)**(~forse))*alian_v_speed;
+      alian_v_coord <= alian_v_coord_copy/* + ((-1)**(~forse))*alian_v_speed*/;
       if ( move ) begin           
         if ( alian_h_coord < alian_h_speed) begin
           alian_h_coord <= 0;          
@@ -340,7 +353,7 @@ end
       if      ( !rst_n )
         sber_logo_counter <= 32'b0;
       else if ( sber_logo_counter <= 32'd2_00000000 )
-        sber_logo_counter <= sber_logo_counter + 32'd15;
+        sber_logo_counter <= sber_logo_counter + 1'b1;
     end
     assign sber_logo_active = ( sber_logo_counter < 32'd2_00000000 );
     //assign gameover_logo_active = alian_is_dead;
@@ -350,6 +363,7 @@ end
     // Logo offset = (800-128)/2=336 from the left edge; Logo v coord = (600-128)/2 = 236
     // Cause we need 1 clock for reading, we start erlier
     assign sber_logo_read_address = {3'b0, h_coord} - 14'd335 + ({4'b0, v_coord} - 14'd235)*14'd128;
+    assign hello_team_read_address = {4'b0, h_coord} - 15'd319 + ({5'b0, v_coord} - 15'd379)*15'd160;
     assign gameover_logo_read_address = {6'b0, h_coord} - 17'd219 + ({6'b0, v_coord} - 17'd119)*17'd360;
     assign hero1_read_address = {3'b0, h_coord} - {4'b0,alian_h_coord} + ({4'b0, v_coord} - {4'b0,alian_v_coord})*14'd128;
     assign gradon_left_read_address = {3'b0, h_coord} - {4'b0,gradon_h_coord} + ({4'b0, v_coord} - {4'b0,gradon_v_coord})*14'd128;
@@ -360,6 +374,11 @@ end
     sber_logo_rom sber_logo_rom (
       .addr ( sber_logo_read_address ),
       .word ( sber_logo_rom_out      ) 
+    );
+
+    hello_team_rom hello_team_rom (
+      .addr ( hello_team_read_address ),
+      .word ( hello_team_rom_out      ) 
     );
 
     gameover_rom gameover_rom (
@@ -405,14 +424,15 @@ alian_is_dead alian_dead(.*);
 
 
 //-------------МОЖНО ЛИ ТАК ДЕЛАТЬ????????------------------------------------//
-always_ff begin
+/*always_ff begin
   if (!rst_n)
     gameover_logo_active = 1'b0;
   else if(alian_is_dead)
     gameover_logo_active = 1'b1;
   else 
     gameover_logo_active = gameover_logo_active;
-end
+end*/
+assign gameover_logo_active = alian_is_dead;
 
 //------------- RGB MUX outputs                                  -------------//
   always_comb begin
@@ -420,7 +440,8 @@ end
       if((h_coord[9:0] >= 10'd335) & (h_coord[9:0] < 10'd463) & (v_coord >= 10'd235) & (v_coord < 10'd363) & ~(sber_logo_rom_out[11:0]==12'h000))
       begin
         object_draw = 5'd1;
-      end
+      end else if( (h_coord[9:0] >= 10'd319) & (h_coord[9:0] < 10'd479) & (v_coord >= 10'd359) & (v_coord < 10'd519)   & ~(hello_team_rom_out[11:0]==12'h000) )
+        object_draw = 5'd4;
       else begin
         object_draw = 5'd0;
       end
@@ -458,10 +479,14 @@ end
         red     = sber_logo_rom_out[3:0];
         green   = sber_logo_rom_out[7:4];
         blue    = sber_logo_rom_out[11:8];
+      end else if(object_draw == 5'd4) begin
+        red     = hello_team_rom_out[3:0];
+        green   = hello_team_rom_out[7:4];
+        blue    = hello_team_rom_out[11:8];
       end else begin
-        red     = (SW[0] ? 4'h8 : 4'h0);
-        green   = (SW[1] ? 4'h8 : 4'h0);
-        blue    = (SW[2] ? 4'h8 : 4'h0);
+        red     = (4'h0);
+        green   = (4'h0);
+        blue    = (4'h0);
       end
     end 
 
@@ -510,7 +535,7 @@ end
             blue    = gradon_right_rom_out[11:8];
           end
         end
-      end else if(object_draw == 5'd2) begin
+      end else if (object_draw == 5'd2) begin
         if(hero1_rom_out[3:0] == 4'd0 & hero1_rom_out[7:4] == 4'd0 & hero1_rom_out[11:8] == 4'd0) begin
           red     = fon_rom_out[3:0];
           green   = fon_rom_out[7:4];
