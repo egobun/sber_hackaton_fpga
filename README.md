@@ -21,7 +21,7 @@ The basis of the implementation was as follows:
 * The mechanics of the jump were implemented using a finite state machine
 * The characters were controlled by changing their coordinates
 
-# Simulation
+## Simulation
 Need a free open source Verilator simulator
 ```
 git clone https://github.com/egobun/sber_hackaton_fpga.git
