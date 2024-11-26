@@ -25,7 +25,7 @@ The basis of the implementation was as follows:
 Need a free open source Verilator simulator
 ```
 git clone https://github.com/egobun/sber_hackaton_fpga.git
-cd src/sim
+cd sber_hackaton_fpga/src/sim
 make
 ./obj_dir/sberday
 ```
